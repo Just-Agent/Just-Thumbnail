@@ -19,16 +19,20 @@ const presets = {
 };
 
 const args = parseArgs(process.argv.slice(2));
-const requestedPreset = args.preset || "responsive";
+if (!args.url && args._.length > 0) {
+  args.url = args._[0];
+}
+
+const requestedPreset = args.preset || "all";
 const selectedPresets = requestedPreset === "all" ? Object.keys(presets) : [requestedPreset];
 
 if (!args.url || selectedPresets.some((preset) => !presets[preset])) {
-  console.error("Usage: node scripts/just-thumbnail.mjs --url <url|file> [--preset responsive|og|square|story|all] [--out out/site] [--title Title]");
+  console.error("Usage: thumb <url|file> [--preset responsive|og|square|story|all] [--out out/site] [--title Title]");
   process.exit(1);
 }
 
 const title = args.title || hostTitle(args.url);
-const outDir = path.resolve(args.out || "out/just-thumbnail");
+const outDir = path.resolve(args.out || path.join("out", slugFor(args.url)));
 const shotsDir = path.join(outDir, "captures");
 const targetUrl = await normalizeUrl(args.url);
 const manifest = {
@@ -57,15 +61,21 @@ try {
 
   await fs.writeFile(path.join(outDir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
   console.log(`Just Thumbnail generated ${selectedPresets.length} preset(s) in ${outDir}`);
+  for (const preset of selectedPresets) {
+    console.log(`${preset}: ${path.join(outDir, presets[preset].file)}`);
+  }
 } finally {
   await browser.close();
 }
 
 function parseArgs(argv) {
-  const parsed = {};
+  const parsed = { _: [] };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
-    if (!arg.startsWith("--")) continue;
+    if (!arg.startsWith("--")) {
+      parsed._.push(arg);
+      continue;
+    }
     const key = arg.slice(2);
     const next = argv[index + 1];
     if (!next || next.startsWith("--")) {
@@ -96,6 +106,15 @@ function hostTitle(input) {
   } catch {
     return "Just Thumbnail";
   }
+}
+
+function slugFor(input) {
+  const raw = hostTitle(input) || "thumbnail";
+  return raw
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48) || "thumbnail";
 }
 
 async function captureAll(browser, url, shotsDir) {
@@ -226,12 +245,13 @@ function compositeHtml(preset, spec, title, source, captures) {
     width: 100%;
     height: 100%;
     display: block;
-    object-fit: cover;
+    object-fit: contain;
     object-position: top center;
+    background: #fff;
   }
   .desktop {
-    left: 575px;
-    top: 185px;
+    left: 650px;
+    top: 145px;
     width: 650px;
     height: 420px;
     border-radius: 18px;
@@ -258,8 +278,8 @@ function compositeHtml(preset, spec, title, source, captures) {
     filter: blur(2px);
   }
   .laptop {
-    left: 980px;
-    top: 485px;
+    left: 955px;
+    top: 635px;
     width: 400px;
     height: 254px;
     border-radius: 13px;
@@ -275,15 +295,15 @@ function compositeHtml(preset, spec, title, source, captures) {
     background: linear-gradient(180deg, #dce3ec, #98a4b2);
   }
   .tablet {
-    left: 315px;
-    top: 500px;
+    left: 390px;
+    top: 635px;
     width: 350px;
     height: 260px;
     border-radius: 20px;
   }
   .phone {
-    left: 672px;
-    top: 650px;
+    left: 775px;
+    top: 645px;
     width: 142px;
     height: 252px;
     border-radius: 25px;
@@ -301,8 +321,9 @@ function compositeHtml(preset, spec, title, source, captures) {
   }
   .card img {
     position: absolute;
-    object-fit: cover;
+    object-fit: contain;
     object-position: top center;
+    background: #fff;
   }
   .og-card {
     left: 515px;

@@ -26,7 +26,8 @@ From this skill folder:
 
 ```powershell
 npm install
-npm run thumbnail -- --url https://example.com --preset all --out out/example --title "Example"
+npm link
+thumb https://example.com
 ```
 
 Outputs include captured viewport screenshots, generated thumbnails, and `manifest.json`.

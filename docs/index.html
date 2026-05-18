@@ -240,20 +240,27 @@
         background: #fff;
       }
 
-      .screen iframe,
       .screen img {
         width: 100%;
         height: 100%;
-        border: 0;
         display: block;
-        object-fit: cover;
+        object-fit: contain;
         object-position: top center;
         background: #fff;
       }
 
+      .screen iframe {
+        position: absolute;
+        left: 0;
+        top: 0;
+        border: 0;
+        background: #fff;
+        transform-origin: top left;
+      }
+
       .desktop {
-        left: 575px;
-        top: 185px;
+        left: 650px;
+        top: 145px;
         width: 650px;
         height: 420px;
         border-radius: 18px;
@@ -283,8 +290,8 @@
       }
 
       .laptop {
-        left: 980px;
-        top: 485px;
+        left: 955px;
+        top: 635px;
         width: 400px;
         height: 254px;
         border-radius: 13px;
@@ -302,16 +309,16 @@
       }
 
       .tablet {
-        left: 315px;
-        top: 500px;
+        left: 390px;
+        top: 635px;
         width: 350px;
         height: 260px;
         border-radius: 20px;
       }
 
       .phone {
-        left: 672px;
-        top: 650px;
+        left: 775px;
+        top: 645px;
         width: 142px;
         height: 252px;
         border-radius: 25px;
@@ -495,6 +502,13 @@
         story: [1080, 1920]
       };
 
+      const deviceViewports = {
+        desktop: [1440, 900],
+        laptop: [1280, 800],
+        tablet: [820, 1180],
+        phone: [390, 844]
+      };
+
       function normalizeUrl(value) {
         if (/^https?:\/\//i.test(value)) return value;
         if (/^(\.?\/|\/)/.test(value) || /\.html?($|[?#])/i.test(value)) return new URL(value, location.href).href;
@@ -522,10 +536,11 @@
         stageSource.textContent = hostname(urlInput.value.trim() || "example.com");
       }
 
-      function screenMarkup() {
+      function screenMarkup(device = "desktop") {
         if (uploadedImage) return `<img src="${uploadedImage}" alt="">`;
         const src = normalizeUrl(urlInput.value.trim() || "https://example.com");
-        return `<iframe src="${src}" loading="lazy" referrerpolicy="no-referrer"></iframe>`;
+        const [width, height] = deviceViewports[device] || deviceViewports.desktop;
+        return `<iframe src="${src}" width="${width}" height="${height}" data-viewport-width="${width}" data-viewport-height="${height}" loading="lazy" referrerpolicy="no-referrer"></iframe>`;
       }
 
       function renderResponsive() {
@@ -533,17 +548,18 @@
           <div class="stage-brand">JUST-THUMBNAIL</div>
           <h1 class="stage-title" id="stageTitle">${escapeHtml(titleInput.value.trim() || "Just Thumbnail")}</h1>
           <div class="stage-source" id="stageSource">${escapeHtml(hostname(urlInput.value.trim() || "example.com"))}</div>
-          <section class="device desktop"><div class="screen">${screenMarkup()}</div></section>
-          <section class="device tablet"><div class="screen">${screenMarkup()}</div></section>
-          <section class="device phone"><div class="screen">${screenMarkup()}</div></section>
-          <section class="device laptop"><div class="screen">${screenMarkup()}</div></section>
+          <section class="device desktop"><div class="screen">${screenMarkup("desktop")}</div></section>
+          <section class="device tablet"><div class="screen">${screenMarkup("tablet")}</div></section>
+          <section class="device phone"><div class="screen">${screenMarkup("phone")}</div></section>
+          <section class="device laptop"><div class="screen">${screenMarkup("laptop")}</div></section>
         `;
       }
 
       function renderSolo() {
+        const soloDevice = preset === "story" ? "phone" : preset === "square" ? "laptop" : "desktop";
         stage.innerHTML = `
           <div class="stage-brand">JUST-THUMBNAIL</div>
-          <section class="solo"><div class="screen">${screenMarkup()}</div></section>
+          <section class="solo"><div class="screen">${screenMarkup(soloDevice)}</div></section>
           <h1 class="stage-title" id="stageTitle">${escapeHtml(titleInput.value.trim() || "Just Thumbnail")}</h1>
           <div class="stage-source" id="stageSource">${escapeHtml(hostname(urlInput.value.trim() || "example.com"))}</div>
         `;
@@ -558,6 +574,7 @@
         if (preset === "responsive") renderResponsive();
         else renderSolo();
         fitStage();
+        scaleIframes();
       }
 
       function fitStage() {
@@ -565,6 +582,19 @@
         const available = stageWrap.getBoundingClientRect();
         const scale = Math.min(available.width / width, available.height / height, 1);
         stage.style.setProperty("--scale", scale.toFixed(4));
+      }
+
+      function scaleIframes() {
+        document.querySelectorAll(".screen iframe").forEach((frame) => {
+          const screen = frame.parentElement;
+          const viewportWidth = Number(frame.dataset.viewportWidth);
+          const viewportHeight = Number(frame.dataset.viewportHeight);
+          const scale = Math.min(screen.clientWidth / viewportWidth, screen.clientHeight / viewportHeight);
+          const left = (screen.clientWidth - viewportWidth * scale) / 2;
+          frame.style.width = `${viewportWidth}px`;
+          frame.style.height = `${viewportHeight}px`;
+          frame.style.transform = `translateX(${left}px) scale(${scale})`;
+        });
       }
 
       function escapeHtml(value) {
@@ -608,7 +638,10 @@
 
       titleInput.addEventListener("input", render);
       urlInput.addEventListener("input", updateText);
-      window.addEventListener("resize", fitStage);
+      window.addEventListener("resize", () => {
+        fitStage();
+        scaleIframes();
+      });
 
       document.querySelector("#export").addEventListener("click", async () => {
         if (mode === "image" && uploadedImage) {
@@ -636,11 +669,17 @@
           setStatus("This browser cannot capture the current tab.");
           return;
         }
-        setStatus("Select this tab, then keep it visible for one second.");
-        const stream = await navigator.mediaDevices.getDisplayMedia({
-          video: { displaySurface: "browser", preferCurrentTab: true },
-          audio: false
-        });
+        setStatus("In the Chrome dialog, choose this Just Thumbnail tab, click Share, then keep this page visible.");
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getDisplayMedia({
+            video: { displaySurface: "browser", preferCurrentTab: true },
+            audio: false
+          });
+        } catch {
+          setStatus("Export canceled. For direct URL output, run thumb <url> locally.");
+          return;
+        }
         const video = document.createElement("video");
         video.srcObject = stream;
         await video.play();
@@ -730,11 +769,12 @@
         ctx.save();
         roundedRect(ctx, x, y, w, h, r);
         ctx.clip();
-        const scale = Math.max(w / img.width, h / img.height);
-        const sw = w / scale;
-        const sh = h / scale;
-        const sx = (img.width - sw) / 2;
-        ctx.drawImage(img, sx, 0, sw, sh, x, y, w, h);
+        const scale = Math.min(w / img.width, h / img.height);
+        const dw = img.width * scale;
+        const dh = img.height * scale;
+        const dx = x + (w - dw) / 2;
+        const dy = y + (h - dh) / 2;
+        ctx.drawImage(img, dx, dy, dw, dh);
         ctx.restore();
       }
 
