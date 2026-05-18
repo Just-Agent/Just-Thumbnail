@@ -13,8 +13,10 @@ const devices = {
 
 const presets = {
   responsive: { width: 1600, height: 960, file: "responsive.png" },
+  matrix: { width: 1200, height: 675, file: "matrix.png" },
   og: { width: 1200, height: 630, file: "og.png" },
   square: { width: 1080, height: 1080, file: "square.png" },
+  app: { width: 1024, height: 1024, file: "app.png" },
   story: { width: 1080, height: 1920, file: "story.png" }
 };
 
@@ -28,7 +30,7 @@ const selectedPresets = requestedPreset === "all" ? Object.keys(presets) : [requ
 const responsiveDevices = parseDevices(args.devices || "desktop,laptop,tablet,phone");
 
 if (!args.url || selectedPresets.some((preset) => !presets[preset])) {
-  console.error("Usage: thumb <url|file> [--preset responsive|og|square|story|all] [--devices desktop,laptop,tablet,phone] [--out out/site] [--title Title]");
+  console.error("Usage: thumb <url|file> [--preset responsive|matrix|og|square|app|story|all] [--devices desktop,laptop,tablet,phone] [--out out/site] [--title Title]");
   process.exit(1);
 }
 
@@ -124,8 +126,10 @@ function requiredCaptureDevices(selectedPresets, responsiveDevices) {
   if (selectedPresets.includes("responsive")) {
     responsiveDevices.forEach((device) => required.add(device));
   }
+  if (selectedPresets.includes("matrix")) required.add("desktop");
   if (selectedPresets.includes("og")) required.add("desktop");
   if (selectedPresets.includes("square")) required.add("laptop");
+  if (selectedPresets.includes("app")) required.add("phone");
   if (selectedPresets.includes("story")) required.add("phone");
   return [...required];
 }
@@ -170,7 +174,7 @@ async function captureAll(browser, url, shotsDir, deviceNames) {
     });
     const page = await context.newPage();
     page.setDefaultTimeout(30000);
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await gotoWithRetries(page, url);
     await page.waitForLoadState("networkidle", { timeout: 8000 }).catch(() => {});
     await page.evaluate(() => document.fonts?.ready).catch(() => {});
 
@@ -187,6 +191,22 @@ async function captureAll(browser, url, shotsDir, deviceNames) {
   return result;
 }
 
+async function gotoWithRetries(page, url, attempts = 3) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45000 });
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts) {
+        await page.waitForTimeout(1200 * attempt);
+      }
+    }
+  }
+  throw lastError;
+}
+
 async function renderComposite(browser, preset, spec, title, source, captures, file, responsiveDeviceNames) {
   await fs.mkdir(path.dirname(file), { recursive: true });
   const page = await browser.newPage({ viewport: { width: spec.width, height: spec.height }, deviceScaleFactor: 1 });
@@ -201,8 +221,10 @@ function compositeHtml(preset, spec, title, source, captures, responsiveDeviceNa
   const safeSource = escapeHtml(cleanSource(source));
   const body = (() => {
     if (preset === "responsive") return responsiveBody(safeTitle, safeSource, captures, responsiveDeviceNames);
+    if (preset === "matrix") return cardBody("matrix", safeTitle, safeSource, captures.desktop.src);
     if (preset === "og") return cardBody("og", safeTitle, safeSource, captures.desktop.src);
     if (preset === "square") return cardBody("square", safeTitle, safeSource, captures.laptop.src);
+    if (preset === "app") return cardBody("app", safeTitle, safeSource, captures.phone.src);
     if (preset === "story") return cardBody("story", safeTitle, safeSource, captures.phone.src);
     throw new Error(`Unsupported preset: ${preset}`);
   })();
@@ -402,6 +424,43 @@ function compositeHtml(preset, spec, title, source, captures, responsiveDeviceNa
     font-size: 20px;
     font-weight: 650;
   }
+  .matrix-card {
+    left: 42px;
+    top: 42px;
+    width: 1116px;
+    height: 591px;
+    border-radius: 30px;
+  }
+  .matrix-card img {
+    left: 28px;
+    top: 28px;
+    width: 1060px;
+    height: 408px;
+    border-radius: 18px;
+    object-fit: cover;
+    object-position: top center;
+    box-shadow: 0 24px 70px rgba(18, 31, 50, 0.14);
+  }
+  .matrix-card h1 {
+    position: absolute;
+    left: 36px;
+    right: 240px;
+    bottom: 70px;
+    margin: 0;
+    font-size: 46px;
+    line-height: 0.98;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+  }
+  .matrix-card p {
+    position: absolute;
+    left: 38px;
+    bottom: 32px;
+    margin: 0;
+    color: #5c6b7f;
+    font-size: 20px;
+    font-weight: 650;
+  }
   .square-card {
     left: 110px;
     top: 110px;
@@ -435,6 +494,62 @@ function compositeHtml(preset, spec, title, source, captures, responsiveDeviceNa
     color: #5c6b7f;
     font-size: 26px;
     font-weight: 650;
+  }
+  .app-card {
+    left: 80px;
+    top: 74px;
+    width: 864px;
+    height: 876px;
+    border-radius: 58px;
+  }
+  .app-card img {
+    left: 570px;
+    top: 116px;
+    width: 238px;
+    height: 560px;
+    border-radius: 42px;
+    object-fit: cover;
+    object-position: top center;
+    box-shadow: 0 28px 86px rgba(18, 31, 50, 0.2);
+  }
+  .app-card h1 {
+    position: absolute;
+    left: 62px;
+    right: 430px;
+    top: 98px;
+    margin: 0;
+    font-size: 52px;
+    line-height: 1.02;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+  }
+  .app-card p {
+    position: absolute;
+    left: 66px;
+    right: 460px;
+    top: 296px;
+    margin: 0;
+    color: #5c6b7f;
+    font-size: 28px;
+    line-height: 1.25;
+    font-weight: 650;
+  }
+  .app-card::after {
+    content: "APP OUTPUT";
+    position: absolute;
+    left: 66px;
+    bottom: 82px;
+    display: inline-flex;
+    align-items: center;
+    height: 46px;
+    padding: 0 18px;
+    border: 1px solid rgba(142, 157, 176, 0.45);
+    border-radius: 999px;
+    color: #173a68;
+    background: #eef6ff;
+    font-size: 16px;
+    font-weight: 850;
+    letter-spacing: 0.08em;
   }
   .story-card {
     left: 92px;

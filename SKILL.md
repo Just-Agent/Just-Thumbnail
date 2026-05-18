@@ -1,6 +1,6 @@
 ---
 name: just-thumbnail
-description: Generate polished website thumbnails from URLs or screenshots, especially multi-device responsive preview images, Open Graph/social cards, square app/store thumbnails, and vertical story posters. Use when Codex needs to make a "Just-Thumbnail" image, website screenshot card, responsive device mockup, README hero preview, GitHub Pages thumbnail tool, or batch thumbnail assets for different platforms.
+description: Generate polished website thumbnails from URLs or screenshots, especially multi-device responsive preview images, repository matrix cards, Open Graph/social cards, app output cards, square app/store thumbnails, and vertical story posters. Use when Codex needs to make a "Just-Thumbnail" image, website screenshot card, responsive device mockup, README hero preview, GitHub Pages thumbnail tool, app output cover, or batch thumbnail assets for different platforms.
 ---
 
 # Just Thumbnail
@@ -14,7 +14,9 @@ Create one thing well: a website thumbnail that looks useful across platforms.
    - Existing screenshot: use the Pages app in `docs/` or adapt the script's generated composite HTML pattern.
 2. Choose presets:
    - `responsive`: desktop, laptop, tablet, and phone in one image.
+   - `matrix`: centered 16:9 project-card thumbnail for repository matrices and Pages galleries.
    - `og`: 1200x630 social/Open Graph card.
+   - `app`: square app-output preview with a mobile capture.
    - `square`: 1080x1080 marketplace or avatar-style card.
    - `story`: 1080x1920 vertical mobile poster.
    - `all`: generate every preset.
@@ -29,6 +31,8 @@ npm install
 npm link
 thumb https://example.com
 thumb https://example.com --preset responsive --devices desktop,tablet,phone
+thumb https://example.com --preset matrix
+thumb https://example.com --preset app
 ```
 
 Outputs include captured viewport screenshots, generated thumbnails, and `manifest.json`.

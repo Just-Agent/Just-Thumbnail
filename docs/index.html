@@ -202,9 +202,19 @@
         height: 630px;
       }
 
+      .stage.matrix {
+        width: 1200px;
+        height: 675px;
+      }
+
       .stage.story {
         width: 1080px;
         height: 1920px;
+      }
+
+      .stage.app {
+        width: 1024px;
+        height: 1024px;
       }
 
       .stage-brand,
@@ -355,7 +365,9 @@
       }
 
       .stage.og .stage-title,
+      .stage.matrix .stage-title,
       .stage.square .stage-title,
+      .stage.app .stage-title,
       .stage.story .stage-title {
         width: auto;
       }
@@ -401,6 +413,41 @@
         font-size: 20px;
       }
 
+      .matrix .solo {
+        left: 42px;
+        top: 42px;
+        width: 1116px;
+        height: 591px;
+        border-radius: 30px;
+      }
+
+      .matrix .solo .screen {
+        left: 28px;
+        top: 28px;
+        width: 1060px;
+        height: 408px;
+        border-radius: 18px;
+      }
+
+      .matrix .solo .screen img,
+      .matrix .solo .screen iframe {
+        object-fit: cover;
+      }
+
+      .matrix .stage-title {
+        left: 78px;
+        top: 506px;
+        right: 280px;
+        font-size: 46px;
+        overflow-wrap: anywhere;
+      }
+
+      .matrix .stage-source {
+        left: 80px;
+        top: 590px;
+        font-size: 20px;
+      }
+
       .square .solo {
         left: 156px;
         top: 260px;
@@ -420,6 +467,53 @@
         left: 80px;
         top: 810px;
         font-size: 26px;
+      }
+
+      .app .solo {
+        left: 650px;
+        top: 190px;
+        width: 238px;
+        height: 560px;
+        border-radius: 42px;
+      }
+
+      .app .solo .screen {
+        inset: 0;
+        border-radius: 42px;
+      }
+
+      .app .stage-title {
+        left: 142px;
+        top: 174px;
+        right: 510px;
+        font-size: 52px;
+        overflow-wrap: anywhere;
+      }
+
+      .app .stage-source {
+        left: 146px;
+        top: 374px;
+        right: 560px;
+        font-size: 28px;
+        line-height: 1.25;
+      }
+
+      .app::after {
+        content: "APP OUTPUT";
+        position: absolute;
+        left: 146px;
+        bottom: 170px;
+        display: inline-flex;
+        align-items: center;
+        height: 46px;
+        padding: 0 18px;
+        border: 1px solid rgba(142, 157, 176, 0.45);
+        border-radius: 999px;
+        color: #173a68;
+        background: #eef6ff;
+        font-size: 16px;
+        font-weight: 850;
+        letter-spacing: 0.08em;
       }
 
       .story .solo {
@@ -480,8 +574,10 @@
           <label>Preset</label>
           <div class="segments" id="presets">
             <button type="button" data-preset="responsive" aria-pressed="true">Responsive</button>
+            <button type="button" data-preset="matrix" aria-pressed="false">Matrix</button>
             <button type="button" data-preset="og" aria-pressed="false">OG</button>
             <button type="button" data-preset="square" aria-pressed="false">Square</button>
+            <button type="button" data-preset="app" aria-pressed="false">App</button>
             <button type="button" data-preset="story" aria-pressed="false">Story</button>
           </div>
         </div>
@@ -533,8 +629,10 @@
 
       const sizes = {
         responsive: [1600, 960],
+        matrix: [1200, 675],
         og: [1200, 630],
         square: [1080, 1080],
+        app: [1024, 1024],
         story: [1080, 1920]
       };
 
@@ -603,7 +701,7 @@
       }
 
       function renderSolo() {
-        const soloDevice = preset === "story" ? "phone" : preset === "square" ? "laptop" : "desktop";
+        const soloDevice = preset === "story" || preset === "app" ? "phone" : preset === "square" ? "laptop" : "desktop";
         stage.innerHTML = `
           <div class="stage-brand">JUST-THUMBNAIL</div>
           <section class="solo"><div class="screen">${screenMarkup(soloDevice)}</div></section>
@@ -855,8 +953,10 @@
 
       function paintSolo(ctx, img, kind) {
         const frames = {
+          matrix: [70, 70, 1060, 408, 18],
           og: [541, 98, 558, 316, 18],
           square: [156, 260, 768, 480, 28],
+          app: [600, 190, 258, 560, 42],
           story: [188, 510, 704, 1040, 44]
         };
         const [x, y, w, h, r] = frames[kind];

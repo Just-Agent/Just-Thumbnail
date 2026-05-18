@@ -2,7 +2,7 @@
 
 # Just Thumbnail
 
-Generate beautiful website thumbnails for responsive previews, Open Graph cards, square covers, and vertical story posters.
+Generate beautiful website thumbnails for responsive previews, repository matrices, Open Graph cards, app output covers, square covers, and vertical story posters.
 
 [![Deploy Pages](https://github.com/Just-Agent/Just-Thumbnail/actions/workflows/pages.yml/badge.svg)](https://github.com/Just-Agent/Just-Thumbnail/actions/workflows/pages.yml)
 [![GitHub Pages](https://img.shields.io/badge/demo-GitHub%20Pages-2ea44f)](https://just-agent.github.io/Just-Thumbnail/)
@@ -22,8 +22,10 @@ Just Thumbnail turns one URL or screenshot into platform-ready preview images. U
 | Preset | Output | Best for |
 | --- | --- | --- |
 | `responsive` | `1600x960` | README hero, product showcase, multi-device website preview |
+| `matrix` | `1200x675` | Repository matrices, project cards, GitHub Pages galleries |
 | `og` | `1200x630` | Open Graph, Twitter/X card, link preview |
 | `square` | `1080x1080` | App store cover, social post, marketplace thumbnail |
+| `app` | `1024x1024` | App output card, mobile product preview, release showcase |
 | `story` | `1080x1920` | Vertical poster, mobile story, short-form preview |
 
 ## Preview Gallery
@@ -35,11 +37,16 @@ Responsive thumbnails can show all devices or only the devices you choose.
 </p>
 
 <p align="center">
+  <img src="docs/readme-assets/matrix.png" alt="Repository matrix thumbnail preview" width="72%" />
+</p>
+
+<p align="center">
   <img src="docs/readme-assets/og.png" alt="Open Graph preview" width="48%" />
   <img src="docs/readme-assets/square.png" alt="Square thumbnail preview" width="48%" />
 </p>
 
 <p align="center">
+  <img src="docs/readme-assets/app.png" alt="App output thumbnail preview" width="360" />
   <img src="docs/readme-assets/story.png" alt="Vertical story thumbnail preview" width="360" />
 </p>
 
@@ -58,8 +65,10 @@ By default `thumb <url>` generates every preset into `out/<site>/`:
 ```text
 out/example/
   responsive.png
+  matrix.png
   og.png
   square.png
+  app.png
   story.png
   captures/
   manifest.json
@@ -69,6 +78,8 @@ Generate only one preset:
 
 ```bash
 thumb https://example.com --preset og --out out/example-og --title "Example"
+thumb https://example.com --preset matrix --out out/example-matrix --title "Example"
+thumb https://example.com --preset app --out out/example-app --title "Example App"
 ```
 
 Choose which devices appear in the responsive thumbnail:
@@ -118,6 +129,8 @@ Use just-thumbnail to generate responsive and Open Graph thumbnails for https://
 ## Notes
 
 - The CLI uses Playwright, so it captures real rendered pages at desktop, laptop, tablet, and phone viewports.
+- `matrix` uses a centered, full-width website screenshot so small project cards do not look right-heavy.
+- `app` uses a phone capture and a square composition for app/release output cards.
 - `responsive` supports custom device combinations with `--devices`.
 - If a website is not responsive, the mobile/tablet thumbnails will show that real layout behavior.
 - Static GitHub Pages cannot run a backend browser renderer or bypass cross-origin rules; that is why the web demo uses iframe preview, screenshot upload, or Chrome tab capture.
