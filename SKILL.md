@@ -28,9 +28,12 @@ From this skill folder:
 npm install
 npm link
 thumb https://example.com
+thumb https://example.com --preset responsive --devices desktop,tablet,phone
 ```
 
 Outputs include captured viewport screenshots, generated thumbnails, and `manifest.json`.
+
+Use `--devices` for the `responsive` preset when the user wants only certain device frames. Valid values are `desktop`, `laptop`, `tablet`, and `phone`; aliases include `pc`, `ipad`, `mobile`, and `iphone`.
 
 ## Quality Rules
 

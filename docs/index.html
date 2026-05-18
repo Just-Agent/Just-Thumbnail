@@ -99,6 +99,31 @@
         gap: 8px;
       }
 
+      .checks {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .checks label {
+        min-height: 38px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 0 10px;
+        color: #25364b;
+        cursor: pointer;
+      }
+
+      .checks input {
+        width: 15px;
+        height: 15px;
+        accent-color: var(--accent);
+      }
+
       .segments button,
       .actions button {
         height: 40px;
@@ -460,6 +485,15 @@
             <button type="button" data-preset="story" aria-pressed="false">Story</button>
           </div>
         </div>
+        <div class="field" id="deviceField">
+          <label>Devices</label>
+          <div class="checks" id="deviceChecks">
+            <label><input type="checkbox" value="desktop" checked />Desktop</label>
+            <label><input type="checkbox" value="laptop" checked />Laptop</label>
+            <label><input type="checkbox" value="tablet" checked />iPad</label>
+            <label><input type="checkbox" value="phone" checked />Phone</label>
+          </div>
+        </div>
         <div class="actions">
           <button class="primary" type="button" id="load">Load URL</button>
           <button type="button" id="export">Export PNG</button>
@@ -490,6 +524,8 @@
       const stageSource = document.querySelector("#stageSource");
       const presets = document.querySelector("#presets");
       const stageWrap = document.querySelector(".stage-wrap");
+      const deviceChecks = document.querySelector("#deviceChecks");
+      const deviceField = document.querySelector("#deviceField");
 
       let preset = "responsive";
       let uploadedImage = "";
@@ -508,6 +544,18 @@
         tablet: [820, 1180],
         phone: [390, 844]
       };
+
+      const deviceDims = {
+        desktop: { width: 650, height: 420 },
+        laptop: { width: 400, height: 254 },
+        tablet: { width: 350, height: 260 },
+        phone: { width: 142, height: 252 }
+      };
+
+      function selectedDevices() {
+        const checked = [...deviceChecks.querySelectorAll("input:checked")].map((input) => input.value);
+        return checked.length ? checked : ["desktop"];
+      }
 
       function normalizeUrl(value) {
         if (/^https?:\/\//i.test(value)) return value;
@@ -544,14 +592,13 @@
       }
 
       function renderResponsive() {
+        const devices = responsivePlacements(selectedDevices());
         stage.innerHTML = `
           <div class="stage-brand">JUST-THUMBNAIL</div>
           <h1 class="stage-title" id="stageTitle">${escapeHtml(titleInput.value.trim() || "Just Thumbnail")}</h1>
           <div class="stage-source" id="stageSource">${escapeHtml(hostname(urlInput.value.trim() || "example.com"))}</div>
-          <section class="device desktop"><div class="screen">${screenMarkup("desktop")}</div></section>
-          <section class="device tablet"><div class="screen">${screenMarkup("tablet")}</div></section>
-          <section class="device phone"><div class="screen">${screenMarkup("phone")}</div></section>
-          <section class="device laptop"><div class="screen">${screenMarkup("laptop")}</div></section>
+          ${devices.map((device) => `
+          <section class="device ${device.name}" style="left:${device.left}px;top:${device.top}px;width:${device.width}px;height:${device.height}px"><div class="screen">${screenMarkup(device.name)}</div></section>`).join("")}
         `;
       }
 
@@ -567,6 +614,7 @@
 
       function render() {
         stage.className = `stage ${preset === "responsive" ? "" : preset}`.trim();
+        deviceField.style.display = preset === "responsive" ? "grid" : "none";
         const [width, height] = sizes[preset];
         stage.style.width = `${width}px`;
         stage.style.height = `${height}px`;
@@ -575,6 +623,56 @@
         else renderSolo();
         fitStage();
         scaleIframes();
+      }
+
+      function responsivePlacements(names) {
+        const all = {
+          desktop: { left: 650, top: 145 },
+          tablet: { left: 390, top: 635 },
+          phone: { left: 775, top: 645 },
+          laptop: { left: 955, top: 635 }
+        };
+        const valid = names.filter((name) => deviceDims[name]);
+        if (valid.length === 4) {
+          return valid.map((name) => ({ name, ...deviceDims[name], ...all[name] }));
+        }
+
+        const single = {
+          desktop: { left: 700, top: 285 },
+          laptop: { left: 760, top: 380 },
+          tablet: { left: 790, top: 360 },
+          phone: { left: 895, top: 365 }
+        };
+        if (valid.length === 1) {
+          const name = valid[0];
+          return [{ name, ...deviceDims[name], ...single[name] }];
+        }
+
+        const hasDesktop = valid.includes("desktop");
+        if (valid.length === 2 && hasDesktop) {
+          const other = valid.find((name) => name !== "desktop");
+          return [
+            { name: "desktop", ...deviceDims.desktop, left: 690, top: 165 },
+            { name: other, ...deviceDims[other], left: other === "phone" ? 910 : 835, top: 620 }
+          ];
+        }
+        if (valid.length === 3 && hasDesktop) {
+          const others = valid.filter((name) => name !== "desktop");
+          return [
+            { name: "desktop", ...deviceDims.desktop, left: 690, top: 135 },
+            { name: others[0], ...deviceDims[others[0]], left: others[0] === "phone" ? 670 : 525, top: 635 },
+            { name: others[1], ...deviceDims[others[1]], left: others[1] === "phone" ? 900 : 920, top: 635 }
+          ];
+        }
+
+        const rowStart = valid.length === 2 ? 610 : 430;
+        const gap = valid.length === 2 ? 90 : 55;
+        let cursor = rowStart;
+        return valid.map((name) => {
+          const placement = { name, ...deviceDims[name], left: cursor, top: name === "phone" ? 380 : 360 };
+          cursor += deviceDims[name].width + gap;
+          return placement;
+        });
       }
 
       function fitStage() {
@@ -614,6 +712,14 @@
           item.setAttribute("aria-pressed", String(item === button));
         });
         render();
+      });
+
+      deviceChecks.addEventListener("change", (event) => {
+        const checked = [...deviceChecks.querySelectorAll("input:checked")];
+        if (checked.length === 0) {
+          event.target.checked = true;
+        }
+        if (preset === "responsive") render();
       });
 
       document.querySelector("#load").addEventListener("click", () => {
@@ -742,10 +848,9 @@
       }
 
       function paintResponsive(ctx, img) {
-        drawDevice(ctx, img, 575, 185, 650, 420, 18);
-        drawDevice(ctx, img, 315, 500, 350, 260, 20);
-        drawDevice(ctx, img, 672, 650, 142, 252, 25);
-        drawDevice(ctx, img, 980, 485, 400, 254, 13);
+        responsivePlacements(selectedDevices()).forEach((device) => {
+          drawDevice(ctx, img, device.left, device.top, device.width, device.height, device.name === "phone" ? 25 : device.name === "laptop" ? 13 : device.name === "tablet" ? 20 : 18);
+        });
       }
 
       function paintSolo(ctx, img, kind) {

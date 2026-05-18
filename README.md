@@ -28,6 +28,12 @@ Just Thumbnail turns one URL or screenshot into platform-ready preview images. U
 
 ## Preview Gallery
 
+Responsive thumbnails can show all devices or only the devices you choose.
+
+<p align="center">
+  <img src="docs/readme-assets/custom-responsive.png" alt="Custom responsive thumbnail showing only iPad and Phone" width="720" />
+</p>
+
 <p align="center">
   <img src="docs/readme-assets/og.png" alt="Open Graph preview" width="48%" />
   <img src="docs/readme-assets/square.png" alt="Square thumbnail preview" width="48%" />
@@ -65,6 +71,16 @@ Generate only one preset:
 thumb https://example.com --preset og --out out/example-og --title "Example"
 ```
 
+Choose which devices appear in the responsive thumbnail:
+
+```bash
+thumb https://example.com --preset responsive --devices desktop,tablet,phone
+thumb https://example.com --preset responsive --devices tablet,phone
+thumb https://example.com --preset responsive --devices phone
+```
+
+Device aliases also work: `pc`, `ipad`, `mobile`, and `iphone`.
+
 ## Web Demo
 
 The static demo is available at:
@@ -77,6 +93,8 @@ The browser version supports two modes:
 | --- | --- |
 | Upload screenshot | Choose an image, pick a preset, click `Export PNG`. This exports directly. |
 | URL preview | Click `Export PNG`, choose the current Just Thumbnail tab in Chrome's share dialog, click `Share`, keep the tab visible for one second. |
+
+When `Responsive` is selected, use the device checkboxes to choose Desktop, Laptop, iPad, Phone, or any smaller combination.
 
 > For fully automatic URL-to-PNG generation, prefer the CLI: `thumb https://example.com`.
 
@@ -100,6 +118,7 @@ Use just-thumbnail to generate responsive and Open Graph thumbnails for https://
 ## Notes
 
 - The CLI uses Playwright, so it captures real rendered pages at desktop, laptop, tablet, and phone viewports.
+- `responsive` supports custom device combinations with `--devices`.
 - If a website is not responsive, the mobile/tablet thumbnails will show that real layout behavior.
 - Static GitHub Pages cannot run a backend browser renderer or bypass cross-origin rules; that is why the web demo uses iframe preview, screenshot upload, or Chrome tab capture.
 - Some sites block iframe display. Use the CLI for those sites.

@@ -25,9 +25,10 @@ if (!args.url && args._.length > 0) {
 
 const requestedPreset = args.preset || "all";
 const selectedPresets = requestedPreset === "all" ? Object.keys(presets) : [requestedPreset];
+const responsiveDevices = parseDevices(args.devices || "desktop,laptop,tablet,phone");
 
 if (!args.url || selectedPresets.some((preset) => !presets[preset])) {
-  console.error("Usage: thumb <url|file> [--preset responsive|og|square|story|all] [--out out/site] [--title Title]");
+  console.error("Usage: thumb <url|file> [--preset responsive|og|square|story|all] [--devices desktop,laptop,tablet,phone] [--out out/site] [--title Title]");
   process.exit(1);
 }
 
@@ -39,6 +40,7 @@ const manifest = {
   source: targetUrl,
   title,
   generatedAt: new Date().toISOString(),
+  responsiveDevices,
   captures: {},
   thumbnails: {}
 };
@@ -47,7 +49,8 @@ await fs.mkdir(shotsDir, { recursive: true });
 
 const browser = await chromium.launch();
 try {
-  const captures = await captureAll(browser, targetUrl, shotsDir);
+  const captureDevices = requiredCaptureDevices(selectedPresets, responsiveDevices);
+  const captures = await captureAll(browser, targetUrl, shotsDir, captureDevices);
   manifest.captures = Object.fromEntries(
     Object.entries(captures).map(([key, value]) => [key, path.relative(outDir, value.file)])
   );
@@ -55,7 +58,7 @@ try {
   for (const preset of selectedPresets) {
     const spec = presets[preset];
     const file = path.join(outDir, spec.file);
-    await renderComposite(browser, preset, spec, title, targetUrl, captures, file);
+    await renderComposite(browser, preset, spec, title, targetUrl, captures, file, responsiveDevices);
     manifest.thumbnails[preset] = path.relative(outDir, file);
   }
 
@@ -80,12 +83,51 @@ function parseArgs(argv) {
     const next = argv[index + 1];
     if (!next || next.startsWith("--")) {
       parsed[key] = true;
+    } else if (key === "devices") {
+      const values = [];
+      while (argv[index + 1] && !argv[index + 1].startsWith("--")) {
+        values.push(argv[index + 1]);
+        index += 1;
+      }
+      parsed[key] = values.join(",");
     } else {
       parsed[key] = next;
       index += 1;
     }
   }
   return parsed;
+}
+
+function parseDevices(value) {
+  const aliases = {
+    pc: "desktop",
+    desktop: "desktop",
+    laptop: "laptop",
+    notebook: "laptop",
+    ipad: "tablet",
+    tablet: "tablet",
+    pad: "tablet",
+    mobile: "phone",
+    phone: "phone",
+    iphone: "phone"
+  };
+  const names = String(value)
+    .split(",")
+    .map((item) => aliases[item.trim().toLowerCase()])
+    .filter(Boolean);
+  const unique = [...new Set(names)];
+  return unique.length > 0 ? unique : ["desktop", "laptop", "tablet", "phone"];
+}
+
+function requiredCaptureDevices(selectedPresets, responsiveDevices) {
+  const required = new Set();
+  if (selectedPresets.includes("responsive")) {
+    responsiveDevices.forEach((device) => required.add(device));
+  }
+  if (selectedPresets.includes("og")) required.add("desktop");
+  if (selectedPresets.includes("square")) required.add("laptop");
+  if (selectedPresets.includes("story")) required.add("phone");
+  return [...required];
 }
 
 async function normalizeUrl(input) {
@@ -117,9 +159,10 @@ function slugFor(input) {
     .slice(0, 48) || "thumbnail";
 }
 
-async function captureAll(browser, url, shotsDir) {
+async function captureAll(browser, url, shotsDir, deviceNames) {
   const result = {};
-  for (const [key, device] of Object.entries(devices)) {
+  for (const key of deviceNames) {
+    const device = devices[key];
     const context = await browser.newContext({
       viewport: { width: device.width, height: device.height },
       deviceScaleFactor: device.dpr,
@@ -144,24 +187,25 @@ async function captureAll(browser, url, shotsDir) {
   return result;
 }
 
-async function renderComposite(browser, preset, spec, title, source, captures, file) {
+async function renderComposite(browser, preset, spec, title, source, captures, file, responsiveDeviceNames) {
   await fs.mkdir(path.dirname(file), { recursive: true });
   const page = await browser.newPage({ viewport: { width: spec.width, height: spec.height }, deviceScaleFactor: 1 });
-  await page.setContent(compositeHtml(preset, spec, title, source, captures), { waitUntil: "load" });
+  await page.setContent(compositeHtml(preset, spec, title, source, captures, responsiveDeviceNames), { waitUntil: "load" });
   await page.evaluate(() => document.fonts?.ready).catch(() => {});
   await page.screenshot({ path: file, fullPage: false, type: "png" });
   await page.close();
 }
 
-function compositeHtml(preset, spec, title, source, captures) {
+function compositeHtml(preset, spec, title, source, captures, responsiveDeviceNames) {
   const safeTitle = escapeHtml(title);
   const safeSource = escapeHtml(cleanSource(source));
-  const body = {
-    responsive: responsiveBody(safeTitle, safeSource, captures),
-    og: cardBody("og", safeTitle, safeSource, captures.desktop.src),
-    square: cardBody("square", safeTitle, safeSource, captures.laptop.src),
-    story: cardBody("story", safeTitle, safeSource, captures.phone.src)
-  }[preset];
+  const body = (() => {
+    if (preset === "responsive") return responsiveBody(safeTitle, safeSource, captures, responsiveDeviceNames);
+    if (preset === "og") return cardBody("og", safeTitle, safeSource, captures.desktop.src);
+    if (preset === "square") return cardBody("square", safeTitle, safeSource, captures.laptop.src);
+    if (preset === "story") return cardBody("story", safeTitle, safeSource, captures.phone.src);
+    throw new Error(`Unsupported preset: ${preset}`);
+  })();
 
   return `<!doctype html>
 <html lang="en">
@@ -434,20 +478,75 @@ function compositeHtml(preset, spec, title, source, captures) {
 </html>`;
 }
 
-function responsiveBody(title, source, captures) {
+function responsiveBody(title, source, captures, deviceNames) {
+  const placements = responsivePlacements(deviceNames);
   return `<main class="stage">
   <div class="brand">JUST-THUMBNAIL</div>
   <h1 class="title">${title}</h1>
   <div class="source">${source}</div>
-  ${device("desktop", captures.desktop.src)}
-  ${device("tablet", captures.tablet.src)}
-  ${device("phone", captures.phone.src)}
-  ${device("laptop", captures.laptop.src)}
+  ${placements.map((placement) => device(placement.name, captures[placement.name].src, placement)).join("\n  ")}
 </main>`;
 }
 
-function device(name, src) {
-  return `<section class="device ${name}" aria-label="${name} preview"><div class="screen"><img src="${src}" alt=""></div></section>`;
+function device(name, src, placement) {
+  const style = placement
+    ? ` style="left:${placement.left}px;top:${placement.top}px;width:${placement.width}px;height:${placement.height}px;"`
+    : "";
+  return `<section class="device ${name}"${style} aria-label="${name} preview"><div class="screen"><img src="${src}" alt=""></div></section>`;
+}
+
+function responsivePlacements(deviceNames) {
+  const dims = {
+    desktop: { width: 650, height: 420 },
+    laptop: { width: 400, height: 254 },
+    tablet: { width: 350, height: 260 },
+    phone: { width: 142, height: 252 }
+  };
+  const names = deviceNames.filter((name) => dims[name]);
+  const all = {
+    desktop: { left: 650, top: 145 },
+    tablet: { left: 390, top: 635 },
+    phone: { left: 775, top: 645 },
+    laptop: { left: 955, top: 635 }
+  };
+  if (names.length === 4) return names.map((name) => ({ name, ...dims[name], ...all[name] }));
+
+  const single = {
+    desktop: { left: 700, top: 285 },
+    laptop: { left: 760, top: 380 },
+    tablet: { left: 790, top: 360 },
+    phone: { left: 895, top: 365 }
+  };
+  if (names.length === 1) {
+    const name = names[0];
+    return [{ name, ...dims[name], ...single[name] }];
+  }
+
+  const hasDesktop = names.includes("desktop");
+  if (names.length === 2 && hasDesktop) {
+    const other = names.find((name) => name !== "desktop");
+    return [
+      { name: "desktop", ...dims.desktop, left: 690, top: 165 },
+      { name: other, ...dims[other], left: other === "phone" ? 910 : 835, top: 620 }
+    ];
+  }
+  if (names.length === 3 && hasDesktop) {
+    const others = names.filter((name) => name !== "desktop");
+    return [
+      { name: "desktop", ...dims.desktop, left: 690, top: 135 },
+      { name: others[0], ...dims[others[0]], left: others[0] === "phone" ? 670 : 525, top: 635 },
+      { name: others[1], ...dims[others[1]], left: others[1] === "phone" ? 900 : 920, top: 635 }
+    ];
+  }
+
+  const rowStart = names.length === 2 ? 610 : 430;
+  const gap = names.length === 2 ? 90 : 55;
+  let cursor = rowStart;
+  return names.map((name) => {
+    const placement = { name, ...dims[name], left: cursor, top: name === "phone" ? 380 : 360 };
+    cursor += dims[name].width + gap;
+    return placement;
+  });
 }
 
 function cardBody(kind, title, source, src) {
