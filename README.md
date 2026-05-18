@@ -13,6 +13,8 @@ The Playwright script writes viewport captures, PNG thumbnails, and a manifest.
 
 ## Web demo
 
+Live demo: https://just-agent.github.io/Just-Thumbnail/
+
 `docs/` is a static GitHub Pages demo. It can compose uploaded screenshots directly in the browser. URL preview mode uses iframes and browser tab capture, so blocked sites still need the Playwright skill or a backend renderer.
 
 ## Presets
