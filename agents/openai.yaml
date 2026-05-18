@@ -1,0 +1,4 @@
+interface:
+  display_name: "Just Thumbnail"
+  short_description: "Generate multi-platform website thumbnails."
+  default_prompt: "Generate a multi-platform website thumbnail from this URL or screenshot."

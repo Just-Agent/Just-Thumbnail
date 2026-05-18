@@ -1,0 +1,14 @@
+{
+  "name": "just-thumbnail",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Generate multi-platform website thumbnails with Playwright.",
+  "scripts": {
+    "thumbnail": "node scripts/just-thumbnail.mjs",
+    "test": "node scripts/just-thumbnail.mjs --url ./assets/sample-page.html --preset all --out ./.tmp/just-thumbnail-test --title \"Just Thumbnail\""
+  },
+  "devDependencies": {
+    "playwright": "^1.60.0"
+  }
+}
