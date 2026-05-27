@@ -28,7 +28,6 @@ Generate polished website thumbnails for responsive previews, repository matrice
 - [Why Just Thumbnail](#why-just-thumbnail)
 - [Quick Tutorial](#quick-tutorial)
 - [Presets](#presets)
-- [Preview Gallery](#preview-gallery)
 - [Usage Scenarios](#usage-scenarios)
 - [CLI Quick Start](#cli-quick-start)
 - [Web Demo](#web-demo)
@@ -73,32 +72,6 @@ Pick the preset by destination first, then adjust devices and visual style.
 | `square` | `1080x1080` | App store cover, social post, marketplace thumbnail |
 | `app` | `1024x1024` | App output card, mobile product preview, release showcase |
 | `story` | `1080x1920` | Vertical poster, mobile story, short-form preview |
-
-## Preview Gallery
-
-Responsive thumbnails can show all devices or only the devices you choose.
-
-<p align="center">
-  <img src="docs/readme-assets/responsive.png" alt="Just Thumbnail responsive multi-device preview" width="720" />
-</p>
-
-<p align="center">
-  <img src="docs/readme-assets/custom-responsive.png" alt="Custom responsive thumbnail showing only iPad and Phone" width="720" />
-</p>
-
-<p align="center">
-  <img src="docs/readme-assets/matrix.png" alt="Repository matrix thumbnail preview" width="72%" />
-</p>
-
-<p align="center">
-  <img src="docs/readme-assets/og.png" alt="Open Graph preview" width="48%" />
-  <img src="docs/readme-assets/square.png" alt="Square thumbnail preview" width="48%" />
-</p>
-
-<p align="center">
-  <img src="docs/readme-assets/app.png" alt="App output thumbnail preview" width="360" />
-  <img src="docs/readme-assets/story.png" alt="Vertical story thumbnail preview" width="360" />
-</p>
 
 ## Usage Scenarios
 
@@ -198,12 +171,6 @@ Use just-thumbnail to generate responsive and Open Graph thumbnails for https://
 | `docs/readme-assets/tutorial-cover-intro.png` | README hero and product positioning |
 | `docs/readme-assets/tutorial-steps-1-to-3.png` | Browser workflow steps 1 to 3 |
 | `docs/readme-assets/tutorial-steps-4-to-6-scenarios.png` | Browser workflow steps 4 to 6 and usage scenarios |
-| `docs/readme-assets/responsive.png` | Responsive multi-device preview |
-| `docs/readme-assets/matrix.png` | Repository matrix preview |
-| `docs/readme-assets/og.png` | Open Graph preview |
-| `docs/readme-assets/square.png` | Square social preview |
-| `docs/readme-assets/app.png` | App output preview |
-| `docs/readme-assets/story.png` | Vertical story preview |
 
 ## Notes
 
