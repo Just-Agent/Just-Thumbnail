@@ -7,13 +7,20 @@
     <style>
       :root {
         color-scheme: light;
-        --bg: #eef3f8;
+        --bg: #eaf0f7;
         --panel: #ffffff;
         --ink: #10213d;
         --muted: #64748b;
         --line: #dbe4ef;
         --accent: #20a96b;
         --blue: #2878d8;
+        --stage-top: #f8fbff;
+        --stage-bottom: #e8eef5;
+        --stage-glow-a: rgba(35, 178, 109, 0.18);
+        --stage-glow-b: rgba(25, 135, 212, 0.16);
+        --stage-ink: #0c2345;
+        --stage-muted: #64748b;
+        --stage-brand: #173a68;
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
 
@@ -21,9 +28,16 @@
         box-sizing: border-box;
       }
 
+      [hidden] {
+        display: none !important;
+      }
+
       body {
         margin: 0;
-        background: var(--bg);
+        background:
+          linear-gradient(135deg, rgba(32, 169, 107, 0.08), transparent 34%),
+          linear-gradient(315deg, rgba(40, 120, 216, 0.1), transparent 38%),
+          var(--bg);
         color: var(--ink);
       }
 
@@ -40,8 +54,9 @@
 
       aside {
         border-right: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.74);
+        background: rgba(255, 255, 255, 0.84);
         padding: 24px;
+        overflow-y: auto;
       }
 
       .brand {
@@ -50,6 +65,13 @@
         gap: 12px;
         margin-bottom: 28px;
         font-weight: 850;
+      }
+
+      .brand-copy {
+        margin: -14px 0 22px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
       }
 
       .mark {
@@ -84,6 +106,19 @@
         outline: none;
       }
 
+      input[type="text"]:focus,
+      input[type="url"]:focus {
+        border-color: rgba(32, 169, 107, 0.6);
+        box-shadow: 0 0 0 4px rgba(32, 169, 107, 0.12);
+      }
+
+      .hint {
+        margin: -3px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
       input[type="file"] {
         width: 100%;
         border: 1px dashed #b8c5d5;
@@ -93,7 +128,8 @@
         color: var(--muted);
       }
 
-      .segments {
+      .segments,
+      .mode-tabs {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 8px;
@@ -125,6 +161,7 @@
       }
 
       .segments button,
+      .mode-tabs button,
       .actions button {
         height: 40px;
         border: 1px solid var(--line);
@@ -135,10 +172,72 @@
         font-weight: 750;
       }
 
+      .mode-tabs button[aria-pressed="true"],
       .segments button[aria-pressed="true"] {
         border-color: rgba(32, 169, 107, 0.4);
         background: rgba(32, 169, 107, 0.12);
         color: #11623e;
+      }
+
+      .preset-help {
+        min-height: 54px;
+        margin-top: 10px;
+        border: 1px solid rgba(32, 169, 107, 0.16);
+        border-radius: 10px;
+        background: linear-gradient(135deg, rgba(32, 169, 107, 0.1), rgba(40, 120, 216, 0.06));
+        padding: 10px 12px;
+        color: #31445b;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .preset-help strong {
+        display: block;
+        margin-bottom: 2px;
+        color: #143150;
+        font-size: 13px;
+      }
+
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 8px;
+      }
+
+      .swatch {
+        height: 34px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--swatch);
+        cursor: pointer;
+      }
+
+      .swatch[aria-pressed="true"] {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px rgba(32, 169, 107, 0.14);
+      }
+
+      .toggle-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .toggle-row button {
+        height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: #25364b;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 750;
+      }
+
+      .toggle-row button[aria-pressed="true"] {
+        border-color: rgba(40, 120, 216, 0.4);
+        background: rgba(40, 120, 216, 0.1);
+        color: #174f91;
       }
 
       .actions {
@@ -161,35 +260,72 @@
         line-height: 1.5;
       }
 
+      .tips {
+        margin-top: 12px;
+        border-top: 1px solid var(--line);
+        padding-top: 14px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .tips code {
+        color: #173a68;
+        font-weight: 750;
+      }
+
       main {
         min-width: 0;
         padding: 30px;
-        display: grid;
-        place-items: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .preview-bar {
+        width: 100%;
+        max-width: 1160px;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        color: #42556d;
+        font-size: 13px;
+      }
+
+      .preview-bar strong {
+        color: #132944;
       }
 
       .stage-wrap {
         position: relative;
-        width: min(100%, 1160px);
+        width: 100%;
+        max-width: 1160px;
         aspect-ratio: 5 / 3;
         overflow: hidden;
       }
 
       .stage {
         position: absolute;
-        left: 50%;
-        top: 50%;
+        left: 0;
+        top: 0;
         width: 1600px;
         height: 960px;
         overflow: hidden;
-        transform: translate(-50%, -50%) scale(var(--scale, 0.7));
-        transform-origin: center;
+        transform: scale(var(--scale, 0.7));
+        transform-origin: top left;
         border-radius: 18px;
         background:
-          radial-gradient(circle at 28% 18%, rgba(35, 178, 109, 0.18), transparent 30%),
-          radial-gradient(circle at 82% 18%, rgba(25, 135, 212, 0.16), transparent 32%),
-          linear-gradient(180deg, #f8fbff 0%, #e8eef5 100%);
+          radial-gradient(circle at 28% 18%, var(--stage-glow-a), transparent 30%),
+          radial-gradient(circle at 82% 18%, var(--stage-glow-b), transparent 32%),
+          linear-gradient(180deg, var(--stage-top) 0%, var(--stage-bottom) 100%);
         box-shadow: 0 30px 100px rgba(17, 31, 52, 0.18);
+      }
+
+      .stage.solid {
+        background: linear-gradient(180deg, var(--stage-top), var(--stage-top));
       }
 
       .stage.square {
@@ -230,7 +366,7 @@
         display: flex;
         align-items: center;
         gap: 12px;
-        color: #173a68;
+        color: var(--stage-brand);
         font-size: 16px;
         font-weight: 850;
       }
@@ -252,12 +388,13 @@
         font-size: 54px;
         line-height: 1;
         letter-spacing: 0;
+        color: var(--stage-ink);
       }
 
       .stage-source {
         left: 58px;
         top: 210px;
-        color: var(--muted);
+        color: var(--stage-muted);
         font-size: 18px;
         font-weight: 650;
       }
@@ -385,31 +522,31 @@
       }
 
       .og .solo {
-        left: 515px;
-        top: 72px;
-        width: 610px;
-        height: 486px;
-        border-radius: 34px;
+        left: 575px;
+        top: 86px;
+        width: 520px;
+        height: 360px;
+        border-radius: 28px;
       }
 
       .og .solo .screen {
-        left: 26px;
-        top: 26px;
-        width: 558px;
-        height: 316px;
-        border-radius: 18px;
+        left: 22px;
+        top: 22px;
+        width: 476px;
+        height: 268px;
+        border-radius: 16px;
       }
 
       .og .stage-title {
-        left: 550px;
-        top: 430px;
-        right: 82px;
-        font-size: 42px;
+        left: 70px;
+        top: 174px;
+        right: 640px;
+        font-size: 58px;
       }
 
       .og .stage-source {
-        left: 552px;
-        top: 520px;
+        left: 74px;
+        top: 430px;
         font-size: 20px;
       }
 
@@ -436,9 +573,9 @@
 
       .matrix .stage-title {
         left: 78px;
-        top: 506px;
+        top: 500px;
         right: 280px;
-        font-size: 46px;
+        font-size: 42px;
         overflow-wrap: anywhere;
       }
 
@@ -450,9 +587,9 @@
 
       .square .solo {
         left: 156px;
-        top: 260px;
+        top: 258px;
         width: 768px;
-        height: 480px;
+        height: 512px;
         border-radius: 28px;
       }
 
@@ -470,10 +607,10 @@
       }
 
       .app .solo {
-        left: 650px;
-        top: 190px;
-        width: 238px;
-        height: 560px;
+        left: 620px;
+        top: 168px;
+        width: 278px;
+        height: 620px;
         border-radius: 42px;
       }
 
@@ -517,10 +654,10 @@
       }
 
       .story .solo {
-        left: 188px;
-        top: 510px;
-        width: 704px;
-        height: 1040px;
+        left: 202px;
+        top: 540px;
+        width: 676px;
+        height: 960px;
         border-radius: 44px;
       }
 
@@ -546,10 +683,24 @@
         aside {
           border-right: 0;
           border-bottom: 1px solid var(--line);
+          padding: 18px;
         }
 
         main {
-          padding: 18px;
+          padding: 16px;
+          justify-content: flex-start;
+        }
+
+        .preview-bar {
+          display: grid;
+        }
+      }
+
+      @media (min-width: 901px) {
+        aside {
+          max-height: 100vh;
+          position: sticky;
+          top: 0;
         }
       }
     </style>
@@ -558,17 +709,27 @@
     <div class="shell">
       <aside>
         <div class="brand"><span class="mark"></span><span>Just Thumbnail</span></div>
+        <p class="brand-copy">Create polished project thumbnails from a URL or uploaded screenshot. Choose a preset, tune the look, then export PNG.</p>
         <div class="field">
+          <label>Source</label>
+          <div class="mode-tabs" id="sourceMode">
+            <button type="button" data-mode="url" aria-pressed="true">URL</button>
+            <button type="button" data-mode="image" aria-pressed="false">Screenshot</button>
+          </div>
+        </div>
+        <div class="field" id="urlField">
           <label for="url">URL</label>
           <input id="url" type="text" value="demo.html" />
+          <p class="hint">Use a public URL, local demo path, or GitHub Pages link.</p>
         </div>
         <div class="field">
           <label for="title">Title</label>
           <input id="title" type="text" value="Just Thumbnail" />
         </div>
-        <div class="field">
+        <div class="field" id="fileField" hidden>
           <label for="file">Screenshot</label>
           <input id="file" type="file" accept="image/*" />
+          <p class="hint">Best for sites that block iframe preview.</p>
         </div>
         <div class="field">
           <label>Preset</label>
@@ -580,6 +741,7 @@
             <button type="button" data-preset="app" aria-pressed="false">App</button>
             <button type="button" data-preset="story" aria-pressed="false">Story</button>
           </div>
+          <div class="preset-help" id="presetHelp"></div>
         </div>
         <div class="field" id="deviceField">
           <label>Devices</label>
@@ -590,13 +752,36 @@
             <label><input type="checkbox" value="phone" checked />Phone</label>
           </div>
         </div>
+        <div class="field">
+          <label>Theme</label>
+          <div class="swatches" id="themeSwatches">
+            <button class="swatch" type="button" data-theme="mint" aria-label="Mint theme" aria-pressed="true" style="--swatch:linear-gradient(135deg,#dcfce7,#dbeafe)"></button>
+            <button class="swatch" type="button" data-theme="blue" aria-label="Blue theme" aria-pressed="false" style="--swatch:linear-gradient(135deg,#dbeafe,#eef2ff)"></button>
+            <button class="swatch" type="button" data-theme="violet" aria-label="Violet theme" aria-pressed="false" style="--swatch:linear-gradient(135deg,#ede9fe,#fce7f3)"></button>
+            <button class="swatch" type="button" data-theme="amber" aria-label="Amber theme" aria-pressed="false" style="--swatch:linear-gradient(135deg,#fef3c7,#e0f2fe)"></button>
+            <button class="swatch" type="button" data-theme="dark" aria-label="Dark theme" aria-pressed="false" style="--swatch:linear-gradient(135deg,#0f172a,#334155)"></button>
+            <button class="swatch" type="button" data-theme="mono" aria-label="Mono theme" aria-pressed="false" style="--swatch:linear-gradient(135deg,#f8fafc,#e2e8f0)"></button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Background</label>
+          <div class="toggle-row" id="backgroundMode">
+            <button type="button" data-background="gradient" aria-pressed="true">Gradient</button>
+            <button type="button" data-background="solid" aria-pressed="false">Solid</button>
+          </div>
+        </div>
         <div class="actions">
           <button class="primary" type="button" id="load">Load URL</button>
           <button type="button" id="export">Export PNG</button>
         </div>
         <div class="status" id="status">Ready.</div>
+        <div class="tips">Tip: URL export uses browser tab capture. For fully automatic URL rendering, run <code>thumb &lt;url&gt;</code> locally.</div>
       </aside>
       <main>
+        <div class="preview-bar">
+          <span><strong id="previewPreset">Responsive</strong> · <span id="previewSize">1600 x 960</span></span>
+          <span id="previewMode">URL preview</span>
+        </div>
         <div class="stage-wrap">
           <section class="stage" id="stage" aria-label="Thumbnail preview">
             <div class="stage-brand">JUST-THUMBNAIL</div>
@@ -622,10 +807,21 @@
       const stageWrap = document.querySelector(".stage-wrap");
       const deviceChecks = document.querySelector("#deviceChecks");
       const deviceField = document.querySelector("#deviceField");
+      const sourceMode = document.querySelector("#sourceMode");
+      const urlField = document.querySelector("#urlField");
+      const fileField = document.querySelector("#fileField");
+      const themeSwatches = document.querySelector("#themeSwatches");
+      const backgroundMode = document.querySelector("#backgroundMode");
+      const presetHelp = document.querySelector("#presetHelp");
+      const previewPreset = document.querySelector("#previewPreset");
+      const previewSize = document.querySelector("#previewSize");
+      const previewMode = document.querySelector("#previewMode");
 
       let preset = "responsive";
       let uploadedImage = "";
       let mode = "url";
+      let theme = "mint";
+      let background = "gradient";
 
       const sizes = {
         responsive: [1600, 960],
@@ -648,6 +844,24 @@
         laptop: { width: 400, height: 254 },
         tablet: { width: 350, height: 260 },
         phone: { width: 142, height: 252 }
+      };
+
+      const presetCopy = {
+        responsive: ["Responsive", "1600 x 960", "README hero, product showcase, multi-device website preview."],
+        matrix: ["Matrix", "1200 x 675", "Repository matrices, project cards, and GitHub Pages galleries."],
+        og: ["Open Graph", "1200 x 630", "Link previews for GitHub, X, LinkedIn, and chat apps."],
+        square: ["Square", "1080 x 1080", "App store covers, social posts, and marketplace thumbnails."],
+        app: ["App", "1024 x 1024", "App output covers and mobile-first release visuals."],
+        story: ["Story", "1080 x 1920", "Vertical story posters and mobile social sharing."]
+      };
+
+      const themes = {
+        mint: ["#f8fbff", "#e8eef5", "rgba(35, 178, 109, 0.18)", "rgba(25, 135, 212, 0.16)", "#0c2345", "#64748b", "#173a68"],
+        blue: ["#f8fbff", "#dbeafe", "rgba(37, 99, 235, 0.16)", "rgba(14, 165, 233, 0.14)", "#10213d", "#52657d", "#174f91"],
+        violet: ["#fbfaff", "#ede9fe", "rgba(124, 58, 237, 0.16)", "rgba(219, 39, 119, 0.12)", "#211646", "#6b5d80", "#5b21b6"],
+        amber: ["#fffaf0", "#e0f2fe", "rgba(245, 158, 11, 0.16)", "rgba(14, 165, 233, 0.12)", "#1f2937", "#6b7280", "#92400e"],
+        dark: ["#172033", "#0f172a", "rgba(32, 169, 107, 0.14)", "rgba(96, 165, 250, 0.12)", "#f8fafc", "#cbd5e1", "#7dd3fc"],
+        mono: ["#ffffff", "#e2e8f0", "rgba(148, 163, 184, 0.12)", "rgba(71, 85, 105, 0.1)", "#111827", "#64748b", "#334155"]
       };
 
       function selectedDevices() {
@@ -677,16 +891,39 @@
         status.textContent = text;
       }
 
+      function applyTheme() {
+        const [top, bottom, glowA, glowB, ink, muted, brand] = themes[theme] || themes.mint;
+        stage.style.setProperty("--stage-top", top);
+        stage.style.setProperty("--stage-bottom", bottom);
+        stage.style.setProperty("--stage-glow-a", glowA);
+        stage.style.setProperty("--stage-glow-b", glowB);
+        stage.style.setProperty("--stage-ink", ink);
+        stage.style.setProperty("--stage-muted", muted);
+        stage.style.setProperty("--stage-brand", brand);
+        stage.classList.toggle("solid", background === "solid");
+      }
+
+      function updateChrome() {
+        const [label, size, help] = presetCopy[preset];
+        presetHelp.innerHTML = `<strong>${label} · ${size}</strong>${help}`;
+        previewPreset.textContent = label;
+        previewSize.textContent = size.replace(" x ", " x ");
+        previewMode.textContent = mode === "image" ? "Screenshot source" : "URL preview";
+        urlField.hidden = mode !== "url";
+        fileField.hidden = mode !== "image";
+        document.querySelector("#load").textContent = mode === "image" ? "Use Screenshot" : "Load URL";
+      }
+
       function updateText() {
-        stageTitle.textContent = titleInput.value.trim() || "Just Thumbnail";
-        stageSource.textContent = hostname(urlInput.value.trim() || "example.com");
+        stage.querySelector("#stageTitle").textContent = titleInput.value.trim() || "Just Thumbnail";
+        stage.querySelector("#stageSource").textContent = hostname(urlInput.value.trim() || "example.com");
       }
 
       function screenMarkup(device = "desktop") {
         if (uploadedImage) return `<img src="${uploadedImage}" alt="">`;
         const src = normalizeUrl(urlInput.value.trim() || "https://example.com");
         const [width, height] = deviceViewports[device] || deviceViewports.desktop;
-        return `<iframe src="${src}" width="${width}" height="${height}" data-viewport-width="${width}" data-viewport-height="${height}" loading="lazy" referrerpolicy="no-referrer"></iframe>`;
+        return `<iframe src="${src}" width="${width}" height="${height}" data-viewport-width="${width}" data-viewport-height="${height}" loading="eager" referrerpolicy="no-referrer"></iframe>`;
       }
 
       function renderResponsive() {
@@ -711,7 +948,7 @@
       }
 
       function render() {
-        stage.className = `stage ${preset === "responsive" ? "" : preset}`.trim();
+        stage.className = `stage ${preset === "responsive" ? "" : preset} ${background === "solid" ? "solid" : ""}`.trim();
         deviceField.style.display = preset === "responsive" ? "grid" : "none";
         const [width, height] = sizes[preset];
         stage.style.width = `${width}px`;
@@ -719,6 +956,8 @@
         stageWrap.style.aspectRatio = `${width} / ${height}`;
         if (preset === "responsive") renderResponsive();
         else renderSolo();
+        applyTheme();
+        updateChrome();
         fitStage();
         scaleIframes();
       }
@@ -812,6 +1051,38 @@
         render();
       });
 
+      sourceMode.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-mode]");
+        if (!button) return;
+        mode = button.dataset.mode;
+        if (mode === "url") uploadedImage = "";
+        sourceMode.querySelectorAll("button").forEach((item) => {
+          item.setAttribute("aria-pressed", String(item === button));
+        });
+        render();
+        setStatus(mode === "image" ? "Choose a screenshot to preview and export directly." : "URL mode selected. Load a page or paste another URL.");
+      });
+
+      themeSwatches.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-theme]");
+        if (!button) return;
+        theme = button.dataset.theme;
+        themeSwatches.querySelectorAll("button").forEach((item) => {
+          item.setAttribute("aria-pressed", String(item === button));
+        });
+        applyTheme();
+      });
+
+      backgroundMode.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-background]");
+        if (!button) return;
+        background = button.dataset.background;
+        backgroundMode.querySelectorAll("button").forEach((item) => {
+          item.setAttribute("aria-pressed", String(item === button));
+        });
+        applyTheme();
+      });
+
       deviceChecks.addEventListener("change", (event) => {
         const checked = [...deviceChecks.querySelectorAll("input:checked")];
         if (checked.length === 0) {
@@ -821,10 +1092,19 @@
       });
 
       document.querySelector("#load").addEventListener("click", () => {
+        if (mode === "image") {
+          if (uploadedImage) {
+            render();
+            setStatus("Screenshot preview refreshed.");
+          } else {
+            setStatus("Choose a screenshot first.");
+          }
+          return;
+        }
         mode = "url";
         uploadedImage = "";
         render();
-        setStatus("URL preview loaded.");
+        setStatus("URL preview loaded. If the site blocks iframe display, switch to Screenshot mode.");
       });
 
       fileInput.addEventListener("change", async () => {
@@ -836,8 +1116,11 @@
           reader.readAsDataURL(file);
         });
         mode = "image";
+        sourceMode.querySelectorAll("button").forEach((item) => {
+          item.setAttribute("aria-pressed", String(item.dataset.mode === "image"));
+        });
         render();
-        setStatus("Screenshot loaded.");
+        setStatus("Screenshot loaded. Export will download directly without tab capture.");
       });
 
       titleInput.addEventListener("input", render);
@@ -921,31 +1204,33 @@
       }
 
       function paintBackground(ctx, width, height) {
+        const [top, bottom, glowA, glowB, ink, muted, brand] = themes[theme] || themes.mint;
         const gradient = ctx.createLinearGradient(0, 0, 0, height);
-        gradient.addColorStop(0, "#f8fbff");
-        gradient.addColorStop(1, "#e8eef5");
+        gradient.addColorStop(0, top);
+        gradient.addColorStop(1, background === "solid" ? top : bottom);
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, width, height);
-        ctx.fillStyle = "rgba(35, 178, 109, 0.12)";
+        ctx.fillStyle = glowA;
         ctx.beginPath();
         ctx.arc(width * 0.28, height * 0.18, width * 0.22, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = "rgba(25, 135, 212, 0.12)";
+        ctx.fillStyle = glowB;
         ctx.beginPath();
         ctx.arc(width * 0.82, height * 0.18, width * 0.22, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = "#173a68";
+        ctx.fillStyle = brand;
         ctx.font = "800 16px system-ui";
         ctx.fillText("JUST-THUMBNAIL", 56, 58);
-        ctx.fillStyle = "#0c2345";
-        ctx.font = "800 54px system-ui";
-        wrapText(ctx, titleInput.value.trim() || "Just Thumbnail", 56, 132, 520, 58);
-        ctx.fillStyle = "#64748b";
-        ctx.font = "650 18px system-ui";
-        ctx.fillText(hostname(urlInput.value.trim() || "example.com"), 58, 232);
       }
 
       function paintResponsive(ctx, img) {
+        const [, , , , ink, muted] = themes[theme] || themes.mint;
+        ctx.fillStyle = ink;
+        ctx.font = "800 54px system-ui";
+        wrapText(ctx, titleInput.value.trim() || "Just Thumbnail", 56, 132, 520, 58);
+        ctx.fillStyle = muted;
+        ctx.font = "650 18px system-ui";
+        ctx.fillText(hostname(urlInput.value.trim() || "example.com"), 58, 232);
         responsivePlacements(selectedDevices()).forEach((device) => {
           drawDevice(ctx, img, device.left, device.top, device.width, device.height, device.name === "phone" ? 25 : device.name === "laptop" ? 13 : device.name === "tablet" ? 20 : 18);
         });
@@ -954,13 +1239,33 @@
       function paintSolo(ctx, img, kind) {
         const frames = {
           matrix: [70, 70, 1060, 408, 18],
-          og: [541, 98, 558, 316, 18],
-          square: [156, 260, 768, 480, 28],
-          app: [600, 190, 258, 560, 42],
-          story: [188, 510, 704, 1040, 44]
+          og: [597, 108, 476, 268, 16],
+          square: [156, 258, 768, 512, 28],
+          app: [620, 168, 278, 620, 42],
+          story: [202, 540, 676, 960, 44]
         };
         const [x, y, w, h, r] = frames[kind];
         drawRoundedImage(ctx, img, x, y, w, h, r);
+        drawSoloText(ctx, kind);
+      }
+
+      function drawSoloText(ctx, kind) {
+        const [, , , , ink, muted] = themes[theme] || themes.mint;
+        const title = titleInput.value.trim() || "Just Thumbnail";
+        const source = hostname(urlInput.value.trim() || "example.com");
+        const text = {
+          matrix: { title: [78, 546, 820, 42, 46], source: [80, 622, 20] },
+          og: { title: [70, 250, 480, 58, 62], source: [74, 430, 20] },
+          square: { title: [76, 136, 920, 64, 72], source: [80, 810, 26] },
+          app: { title: [142, 226, 372, 52, 58], source: [146, 420, 28] },
+          story: { title: [84, 180, 912, 92, 98], source: [88, 320, 34] }
+        }[kind];
+        ctx.fillStyle = ink;
+        ctx.font = `800 ${text.title[3]}px system-ui`;
+        wrapText(ctx, title, text.title[0], text.title[1], text.title[2], text.title[4]);
+        ctx.fillStyle = muted;
+        ctx.font = `650 ${text.source[2]}px system-ui`;
+        ctx.fillText(source, text.source[0], text.source[1]);
       }
 
       function drawDevice(ctx, img, x, y, w, h, r) {
